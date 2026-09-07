@@ -2,6 +2,10 @@ import json
 import requests
 import time
 from datetime import datetime
+from dotenv import load_dotenv
+import os
+
+
 
 def get_token(url, username, password):
     url = f"{url}/api_jsonrpc.php"
@@ -149,5 +153,13 @@ def format_history_rx(history):
         print(f"Error de exception No se pudo formatear los datos de historial rx: {e}")
         return None
     
-    
-    
+
+if __name__ == "__main__":
+
+    load_dotenv()
+
+    ZABBIX_USER = os.getenv("ZABBIX_USER")
+    ZABBIX_PASSWORD = os.getenv("ZABBIX_PASSWORD")
+    URL_ZABBIX_CENTRAL = os.getenv("URL_ZABBIX_CENTRAL")
+    token = get_token(URL_ZABBIX_CENTRAL, ZABBIX_USER, ZABBIX_PASSWORD)
+    print(f"Token obtenido: {token}")

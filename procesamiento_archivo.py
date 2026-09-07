@@ -42,7 +42,7 @@ def check_mpls_port_data(contenido: list) -> bool:
     for i in range(len(contenido)):
         if not "mpls" in contenido[i][0]:
             return False
-        elif not ".redip.cl" in contenido[i][1]:
+        elif not ".redip.cl" in contenido[i][0]:
             return False
     return True
             
