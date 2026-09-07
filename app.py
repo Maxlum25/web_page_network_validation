@@ -119,7 +119,10 @@ def login():
             return flask.render_template("login.html", login_error = login_error)
     return flask.render_template("login.html")
         
-        
+
+@app.get("/healthz")
+def healthz():
+    return {"status": "ok"}, 200     
         
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="127.0.0.1", port=5000, debug=True)
