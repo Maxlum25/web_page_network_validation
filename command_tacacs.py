@@ -1,7 +1,10 @@
 from netmiko import ConnectHandler
 from netmiko.exceptions import NetMikoTimeoutException, NetMikoAuthenticationException
 import socket
+import logging
 
+# Crea un logger con el nombre del módulo
+logger = logging.getLogger(__name__)
 
 def check_port_status(host, username, password, port):
     #this host has diferent names between zabbix and tacacs.
@@ -25,13 +28,13 @@ def check_port_status(host, username, password, port):
         return output
     
     except NetMikoAuthenticationException:
-        print("Error: Falló la autenticación (Usuario/Pass incorrectos)")
+        logger.error(f"Error: Falló la autenticación (Usuario/Pass incorrectos), exc_info=True")
         return "No fue posible extraer los datos"
     except NetMikoTimeoutException:
-        print("Error: Tiempo de espera agotado (El equipo no responde)")
+        logger.error(f"Error: Tiempo de espera agotado (El equipo no responde), exc_info=True")
         return "No fue posible extraer los datos"
     except Exception as e:
-        print(f"Error desconocido SSH: {str(e)}")
+        logger.error(f"Error desconocido SSH: {str(e)}, exc_info=True")
         return "No fue posible extraer los datos"
 
 
@@ -42,4 +45,5 @@ def puerto_abierto(host, puerto=22):
         with socket.create_connection((host, puerto), timeout=0.5):
             return True
     except OSError:
+        logger.error(f"no fue posible conectar con equipo {host}, exc_info=True")
         return False

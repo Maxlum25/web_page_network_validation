@@ -12,6 +12,7 @@
         {% endif %}
 
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <label for="username">Usuario</label>
             <input type="text" name="username" required>
             <label for="password">Contraseña</label>

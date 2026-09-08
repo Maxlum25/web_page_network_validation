@@ -1,4 +1,6 @@
 import flask
+import logging
+from logging.handlers import RotatingFileHandler
 from dotenv import load_dotenv
 import os
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -9,19 +11,37 @@ from command_tacacs import check_port_status
 from zabbix import get_hostid, get_itemid, get_rx_trend, format_history_rx
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_wtf.csrf import CSRFProtect
 
 
 
 app = flask.Flask(__name__)
 load_dotenv()
 
+if not os.path.exists('logs'):
+    os.mkdir('logs')
+
+file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10)
+
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+))
+
+file_handler.setLevel(logging.INFO)
+
+app.logger.addHandler(file_handler)
+app.logger.setLevel(logging.INFO)
+
+app.logger.info('Sistema de monitoreo iniciado correctamente')
+
 limiter = Limiter(get_remote_address, app=app, storage_uri="memory://")
 
 # --- Configuración ---
 app.secret_key = os.getenv("APP_SECRET_KEY")
+csrf = CSRFProtect(app)
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SAMESITE="Strict",
     SESSION_COOKIE_SECURE=True,   # detrás de Nginx con HTTPS
     MAX_CONTENT_LENGTH=10 * 1024 * 1024,  # 10 MB máx para subidas
 )
@@ -131,4 +151,4 @@ def healthz():
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(host="127.0.0.1", port=5000, debug=False)

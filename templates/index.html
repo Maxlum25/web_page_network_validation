@@ -255,6 +255,7 @@
                 <p class="error">{{ error_csv }}</p>
             {% endif %}
             <form method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="file" name="archivo_csv" accept=".csv" id="input_csv">
                 <button type="submit" name="accion" value="subir_csv">Procesar CSV</button>
             </form>
@@ -266,6 +267,7 @@
                 <p class="error">{{ error_textarea }}</p>
             {% endif %}
             <form method="POST" onsubmit="showLoading()">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <label for="equipos_puertas">datos:</label>
                 <textarea name="equipos_puertas" rows="15" cols="30" placeholder="mpls01-mone.redip.cl 2/2/2
 mpls02-caum.redip.cl 1/1/1

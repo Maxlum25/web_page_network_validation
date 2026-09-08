@@ -23,7 +23,7 @@ def main():
     cur = con.cursor()
     
     cur.execute("""
-        CREATE TABLE users(
+        CREATE TABLE IF NOT EXISTS users(
             id INTEGER PRIMARY KEY,
             username TEXT NOT NULL,
             password TEXT NOT NULL )

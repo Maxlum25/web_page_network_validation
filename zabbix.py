@@ -4,6 +4,9 @@ import time
 from datetime import datetime
 from dotenv import load_dotenv
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -28,11 +31,11 @@ def get_token(url, username, password):
         if "result" in respuesta_json:
             return respuesta_json["result"]
         else:
-            print (f"Error al obtener token: {respuesta_json.get("error")}")
+            logger.error(f"Error al obtener token: {respuesta_json.get("error")}, exc_info=True")
             return None
     
     except Exception as e:
-        print(f"Error exception al intentar obtener token: {e}")
+        logger.error(f"Error exception al intentar obtener token: {e}, exc_info=True")
         return None
     
 def get_hostid(url, token, host):
@@ -61,10 +64,10 @@ def get_hostid(url, token, host):
         if "result" in respuesta_json:
             return respuesta_json["result"][0]["hostid"]
         else:
-            print(f"Error al obtener el hostid: {respuesta_json.get("error")}")
+            logger.error(f"Error al obtener el hostid: {respuesta_json.get("error")}, exc_info=True")
             return None
     except Exception as e:
-        print(f"Error exception al intentar obtener hostid: {e}")
+        logger.error(f"Error exception al intentar obtener hostid: {e}, exc_info=True")
         return None
     
 def get_itemid(url, token, hostid, port):
@@ -94,11 +97,11 @@ def get_itemid(url, token, hostid, port):
         if "result" in respuesta_json:
             return respuesta_json["result"][0]["itemid"]
         else:
-            print(f"Error al obtener el itemid: {respuesta_json.get("error")}")
+            logger.error(f"Error al obtener el itemid: {respuesta_json.get("error")}, exc_info=True")
             return None
     
     except Exception as e:
-        print(f"Error exception al obtener itemid: {e}")
+        logger.error(f"Error exception al obtener itemid: {e}, exc_info=True")
         return None
     
 
@@ -130,10 +133,11 @@ def get_rx_trend(url, token, itemid):
         if "result" in respuesta_json:
             return respuesta_json["result"]
         else:
-            print(f"No se pudo obtener el historial: {respuesta_json.get("error")}")
+            logger.error(f"No se pudo obtener el historial: {respuesta_json.get("error")}, exc_info=True")
             return None
     except Exception as e:
-        print(f"Error de exception al obtener historial: {e}")
+        logger.error(f"Error de exception al obtener historial: {e}, exc_info=True")
+        
             
 def format_history_rx(history):
     fecha = []
@@ -150,7 +154,7 @@ def format_history_rx(history):
             salida.append((fecha_formato[i], history[i]["value_avg"]))
         return salida
     except Exception as e:
-        print(f"Error de exception No se pudo formatear los datos de historial rx: {e}")
+        logger.error(f"Error de exception No se pudo formatear los datos de historial rx: {e}, exc_info=True")
         return None
     
 
