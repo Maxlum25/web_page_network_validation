@@ -30,11 +30,17 @@ def main():
     """)
     
     cur.execute("""
-       INSERT INTO users (username, password) VALUES (?, ?)
-            """, (username, hashed))
-    
+        INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)
+    """, (username, hashed))
+
     con.commit()
-    
+
+    # Opcional: Verificar si se insertó realmente
+    if cur.rowcount == 0:
+        print("El usuario ya existía, no se hizo nada.")
+    else:
+        print("Usuario creado exitosamente.")
+        
     
     
     
