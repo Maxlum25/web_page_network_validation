@@ -69,16 +69,50 @@ def index():
     if flask.request.method == "POST":
         accion = flask.request.form.get("accion")
 
-        if accion == "subir_csv":
-            archivo_csv = flask.request.files["archivo_csv"]
-            MIME_PERMITIDOS = ['text/csv', 'application/vnd.ms-excel', 'text/plain']
-            if archivo_csv.filename == "" or not archivo_csv.filename.lower().endswith(".csv") or archivo_csv.content_type not in MIME_PERMITIDOS:
-                error_csv = "Archivo no valido, adjunta un CSV"
-                return flask.render_template("index.html", error_csv=error_csv)
-            else:
-                archivo_csv = tratar_csv(archivo_csv)
-                for host, port in archivo_csv:
-                    print(f"{host}: {port}")
+        try:
+            if accion == "subir_csv":
+                try:
+                    archivo_csv = flask.request.files["archivo_csv"]
+                    MIME_PERMITIDOS = ['text/csv', 'application/vnd.ms-excel', 'text/plain']
+                    if archivo_csv.filename == "" or not archivo_csv.filename.lower().endswith(".csv") or archivo_csv.content_type not in MIME_PERMITIDOS:
+                        error_csv = "Archivo no valido, adjunta un CSV"
+                        return flask.render_template("index.html", error_csv=error_csv)
+                    else:
+                        archivo_csv = tratar_csv(archivo_csv)
+                        for host, port in archivo_csv:
+                            print(f"{host}: {port}")
+                            if not command_tacacs.puerto_abierto(host):
+                                salida_mpls.append(f"No fue posible conectar con {host}")
+                                fecha_potencia = [('sin información', 'sin información')]
+                                historial_rx.append(fecha_potencia)
+                                host_port.append(f"{host}: {port}")
+                                continue
+                            salida_mpls.append(check_port_status(host, TACACS_USER, TACACS_PASSWORD, port))
+                            hostid = get_hostid(URL_ZABBIX_CENTRAL, TOKEN_ZABBIX, host)
+                            itemid = get_itemid(URL_ZABBIX_CENTRAL, TOKEN_ZABBIX, hostid, port)
+                            history = get_rx_trend(URL_ZABBIX_CENTRAL, TOKEN_ZABBIX, itemid)
+                            history = format_history_rx(history)
+                            host_port.append(f"{host}: {port}")
+                            historial_rx.append(history)
+
+                        datos_combinados = zip(historial_rx, salida_mpls, host_port)
+                        return flask.render_template("index.html", datos_combinados=datos_combinados)
+                except Exception as e:
+                    app.logger.error(f"Error crítico procesando CSV: {str(e)}", exc_info=True)
+                    return flask.render_template("index.html", error_csv="Ocurrió un error interno al procesar el archivo")
+
+            elif accion == "revisar_equipos":
+                equipos_puertas = flask.request.form.get("equipos_puertas")
+                if equipos_puertas == "":
+                    print("No se escribio nada en el Textarea")
+                    error_textarea = "Primero debes proporcionar los datos"
+                    return flask.render_template("index.html", error_textarea=error_textarea)
+                equipos_puertas = tratar_textarea(equipos_puertas)
+                print(f"Equipos y puertos: {equipos_puertas}")
+                if not check_mpls_port_data(equipos_puertas):
+                    error_textarea = "Revisa los datos y vuelve a colocarlos"
+                    return flask.render_template("index.html", error_textarea=error_textarea)
+                for host, port in equipos_puertas:
                     if not command_tacacs.puerto_abierto(host):
                         salida_mpls.append(f"No fue posible conectar con {host}")
                         fecha_potencia = [('sin información', 'sin información')]
@@ -93,37 +127,14 @@ def index():
                     host_port.append(f"{host}: {port}")
                     historial_rx.append(history)
 
-                datos_combinados = zip(historial_rx, salida_mpls, host_port)
-                return flask.render_template("index.html", datos_combinados=datos_combinados)
-
-        elif accion == "revisar_equipos":
-            equipos_puertas = flask.request.form.get("equipos_puertas")
-            if equipos_puertas == "":
-                print("No se escribio nada en el Textarea")
-                error_textarea = "Primero debes proporcionar los datos"
-                return flask.render_template("index.html", error_textarea=error_textarea)
-            equipos_puertas = tratar_textarea(equipos_puertas)
-            print(f"Equipos y puertos: {equipos_puertas}")
-            if not check_mpls_port_data(equipos_puertas):
-                error_textarea = "Revisa los datos y vuelve a colocarlos"
-                return flask.render_template("index.html", error_textarea=error_textarea)
-            for host, port in equipos_puertas:
-                if not command_tacacs.puerto_abierto(host):
-                    salida_mpls.append(f"No fue posible conectar con {host}")
-                    fecha_potencia = [('sin información', 'sin información')]
-                    historial_rx.append(fecha_potencia)
-                    host_port.append(f"{host}: {port}")
-                    continue
-                salida_mpls.append(check_port_status(host, TACACS_USER, TACACS_PASSWORD, port))
-                hostid = get_hostid(URL_ZABBIX_CENTRAL, TOKEN_ZABBIX, host)
-                itemid = get_itemid(URL_ZABBIX_CENTRAL, TOKEN_ZABBIX, hostid, port)
-                history = get_rx_trend(URL_ZABBIX_CENTRAL, TOKEN_ZABBIX, itemid)
-                history = format_history_rx(history)
-                host_port.append(f"{host}: {port}")
-                historial_rx.append(history)
-
-        datos_combinados = zip(historial_rx, salida_mpls, host_port)
-        return flask.render_template("index.html", datos_combinados=datos_combinados, error_textarea=error_textarea)
+            datos_combinados = zip(historial_rx, salida_mpls, host_port)
+            return flask.render_template("index.html", datos_combinados=datos_combinados, error_textarea=error_textarea)
+        
+        except Exception as e:
+            app.logger.error(f"Error crítico procesando solicitud: {str(e)}", exc_info=True)
+            error_general = "Ocurrió un error interno al procesar la solicitud."
+            return flask.render_template("index.html", error_textarea=error_general if accion == "revisar_equipos" else None, 
+                                         error_csv=error_general if accion == "subir_csv" else None)
 
     return flask.render_template("index.html")
 

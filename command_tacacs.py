@@ -20,7 +20,6 @@ def check_port_status(host, username, password, port):
     }
         
     try:
-        
         net_connect = ConnectHandler(**device)
         comand = f"show port {port}"
         output = net_connect.send_command(comand)
@@ -28,13 +27,18 @@ def check_port_status(host, username, password, port):
         return output
     
     except NetMikoAuthenticationException:
-        logger.error(f"Error: Falló la autenticación (Usuario/Pass incorrectos), exc_info=True")
+        # CORREGIDO: exc_info fuera de las comillas
+        logger.error("Error: Falló la autenticación (Usuario/Pass incorrectos)", exc_info=True)
         return "No fue posible extraer los datos"
+    
     except NetMikoTimeoutException:
-        logger.error(f"Error: Tiempo de espera agotado (El equipo no responde), exc_info=True")
+        # CORREGIDO: exc_info fuera de las comillas
+        logger.error("Error: Tiempo de espera agotado (El equipo no responde)", exc_info=True)
         return "No fue posible extraer los datos"
+    
     except Exception as e:
-        logger.error(f"Error desconocido SSH: {str(e)}, exc_info=True")
+        # CORREGIDO: exc_info fuera de las comillas
+        logger.error(f"Error desconocido SSH: {str(e)}", exc_info=True)
         return "No fue posible extraer los datos"
 
 
@@ -45,5 +49,8 @@ def puerto_abierto(host, puerto=22):
         with socket.create_connection((host, puerto), timeout=0.5):
             return True
     except OSError:
-        logger.error(f"no fue posible conectar con equipo {host}, exc_info=True")
+        # CORREGIDO: exc_info fuera de las comillas
+        # Nota: Para errores de red comunes (OSError), a veces no hace falta el traceback completo,
+        # pero si quieres verlo, déjalo así:
+        logger.error(f"No fue posible conectar con equipo {host}", exc_info=True)
         return False
